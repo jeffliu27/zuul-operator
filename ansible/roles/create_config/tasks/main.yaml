@@ -1,0 +1,24 @@
+---
+- name: create a configmap
+  k8s:
+    state: "{{ state }}"
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: "{{ zuul_configmap_name }}"
+        namespace: "{{ namespace }}"
+        labels:
+          app: "{{ zuul_app_name }}"
+          zuul_cluster: "{{ zuul_cluster_name }}"
+      data:
+        "zuul.conf":
+          [gearman]
+          server=zuul-scheduler-{{ zuul_app_name }}
+          port=4730
+
+          [zookeeper]
+          hosts=zk-{{ zuul_app_name }}
+
+          [gearman_server]
+          start=true

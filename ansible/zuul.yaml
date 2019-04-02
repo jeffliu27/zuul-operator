@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  tasks:
+    - debug: msg="Running Zuul Operator Playbook"
+    - import_role:
+        name: get_status
+    - import_role:
+        name: create_config

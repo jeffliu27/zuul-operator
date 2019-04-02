@@ -1,0 +1,9 @@
+---
+namespace: "default"
+
+zuul_app_name: "zuul"
+zuul_cluster_name: "zuul"
+
+zuul_version: "3.7.1"
+zuul_image_name: "zuul/zuul:{{ zuul_version }}"
+zuul_service_account_name: "zuul-operator"
