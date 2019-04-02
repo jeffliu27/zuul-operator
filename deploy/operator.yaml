@@ -19,17 +19,16 @@ spec:
           - /usr/local/bin/ao-logs
           - /tmp/ansible-operator/runner
           - stdout
-          # Replace this with the built image name
-          image: "{{ REPLACE_IMAGE }}"
-          imagePullPolicy: "{{ pull_policy|default('Always') }}"
+          # TODO: use a public name
+          image: "172.30.1.1:5000/myproject/zuul-operator"
+          imagePullPolicy: "Never"
           volumeMounts:
           - mountPath: /tmp/ansible-operator/runner
             name: runner
             readOnly: true
         - name: operator
-          # Replace this with the built image name
-          image: "{{ REPLACE_IMAGE }}"
-          imagePullPolicy: "{{ pull_policy|default('Always') }}"
+          image: "172.30.1.1:5000/myproject/zuul-operator"
+          imagePullPolicy: "Never"
           volumeMounts:
           - mountPath: /tmp/ansible-operator/runner
             name: runner

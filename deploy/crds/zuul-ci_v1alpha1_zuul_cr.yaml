@@ -3,5 +3,7 @@ kind: Zuul
 metadata:
   name: example-zuul
 spec:
-  # Add fields here
-  size: 3
+  merger:
+    instances: 1
+  connections: []
+  tenants: []

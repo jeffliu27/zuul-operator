@@ -2,4 +2,4 @@
 - version: v1alpha1
   group: zuul-ci.org
   kind: Zuul
-  role: /opt/ansible/roles/zuul
+  playbook: /opt/ansible/zuul.yaml
