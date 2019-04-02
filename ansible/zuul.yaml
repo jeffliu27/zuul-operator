@@ -1,8 +1,14 @@
 ---
 - hosts: localhost
+  gather_facts: no
   tasks:
     - debug: msg="Running Zuul Operator Playbook"
     - import_role:
         name: get_status
     - import_role:
+        name: deploy_zk
+      when: (zk_cr_lookup|length==0)
+    - import_role:
         name: create_config
+    - import_role:
+        name: deploy

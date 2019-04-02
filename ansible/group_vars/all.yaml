@@ -1,9 +1,30 @@
 ---
 namespace: "default"
+state: "present"
 
 zuul_app_name: "zuul"
 zuul_cluster_name: "zuul"
 
-zuul_version: "3.7.1"
-zuul_image_name: "zuul/zuul:{{ zuul_version }}"
+zuul_version: "latest" #"3.7.1"
+zuul_image_name: "docker.io/zuul/zuul"
+zuul_image_name_scheduler: "{{ zuul_image_name }}-scheduler:{{ zuul_version }}"
+zuul_image_name_merger: "{{ zuul_image_name }}-merger:{{ zuul_version }}"
+zuul_image_name_executor: "{{ zuul_image_name }}-executor:{{ zuul_version }}"
+zuul_image_name_web: "{{ zuul_image_name }}-web:{{ zuul_version }}"
 zuul_service_account_name: "zuul-operator"
+
+zuul_configmap_name: "{{ zuul_cluster_name }}-config"
+
+zk_cluster_name: "example-zk"
+zk_api_version: "zookeeper.pravega.io/v1beta1"
+
+
+# Default cr spec
+tenants: []
+connections: []
+merger:
+  instances: 0
+executor:
+  instances: 1
+web:
+  instances: 1

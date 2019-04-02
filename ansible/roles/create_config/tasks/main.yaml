@@ -1,5 +1,42 @@
 ---
-- name: create a configmap
+- name: Create the scheduler configmap
+  k8s:
+    state: "{{ state }}"
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: "{{ zuul_configmap_name }}-scheduler"
+        namespace: "{{ namespace }}"
+        labels:
+          app: "{{ zuul_app_name }}"
+          zuul_cluster: "{{ zuul_cluster_name }}"
+      data:
+        "zuul.conf": |
+          [gearman]
+          server=localhost
+          port=4730
+
+          [zookeeper]
+          hosts={{ zk_cluster_name }}-client:2181
+
+          [gearman_server]
+          start=true
+
+          [scheduler]
+          tenant_config=/etc/zuul/main.yaml
+
+          {% for connection in connections %}
+          [connection {{ connection["name"] }}]
+          driver={{ connection["driver"] }}
+          server={{ connection["server"] }}
+
+          {% endfor %}
+
+        "main.yaml": |
+          {{ tenants|to_yaml }}
+
+- name: Create the zuul service configmap
   k8s:
     state: "{{ state }}"
     definition:
@@ -12,13 +49,17 @@
           app: "{{ zuul_app_name }}"
           zuul_cluster: "{{ zuul_cluster_name }}"
       data:
-        "zuul.conf":
+        "zuul.conf": |
           [gearman]
-          server=zuul-scheduler-{{ zuul_app_name }}
+          server=zuul-scheduler
           port=4730
 
           [zookeeper]
-          hosts=zk-{{ zuul_app_name }}
+          hosts={{ zk_cluster_name }}-client:2181
 
-          [gearman_server]
-          start=true
+          {% for connection in connections %}
+          [connection {{ connection["name"] }}]
+          driver={{ connection["driver"] }}
+          server={{ connection["server"] }}
+
+          {% endfor %}

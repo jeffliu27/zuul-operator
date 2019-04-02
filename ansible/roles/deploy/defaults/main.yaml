@@ -1,0 +1,1 @@
+zuul_image_pull_policy: IfNotPresent

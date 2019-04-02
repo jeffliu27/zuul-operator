@@ -1,0 +1,14 @@
+- name: Zookeeper Deployment
+  k8s:
+    definition:
+      apiVersion: "{{ zk_api_version }}"
+      kind: "ZookeeperCluster"
+      metadata:
+        name: "{{ zk_cluster_name }}"
+        namespace: "{{ namespace }}"
+        labels:
+          app: "{{ zuul_app_name }}"
+          zuul_cluster: "{{ zuul_cluster_name }}"
+      spec:
+        size: 1
+        version: "3.5.3-beta"
