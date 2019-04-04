@@ -1,18 +1,19 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: zuuls.zuul-ci.org
+  name: zuulservices.operator.zuul-ci.org
 spec:
-  group: zuul-ci.org
+  group: operator.zuul-ci.org
   names:
-    kind: Zuul
-    listKind: ZuulList
-    plural: zuuls
-    singular: zuul
+    kind: ZuulService
+    listKind: ZuulServiceList
+    plural: zuulservices
+    singular: zuulservice
+    shortNames:
+      - zuul
   scope: Namespaced
   subresources:
     status: {}
-  version: v1alpha1
   versions:
   - name: v1alpha1
     served: true

@@ -55,7 +55,7 @@ rules:
   verbs:
   - update
 - apiGroups:
-  - zuul-ci.org
+  - operator.zuul-ci.org
   resources:
   - '*'
   verbs:

@@ -1,6 +1,7 @@
 ---
 - set_fact:
     label_selector_value: "zuul_cluster={{ zuul_cluster_name }},app={{ zuul_app_name }}"
+    sched_selector_value: "zuul_cluster={{ zuul_cluster_name }},app={{ zuul_cluster_name }}-scheduler"
 
 - name: lookup k8s secrets
   set_fact:
@@ -10,19 +11,15 @@
   set_fact:
     zk_cr_lookup: "{{ lookup('k8s', api_version=zk_api_version, kind='ZookeeperCluster', namespace=namespace, resource_name=zk_cluster_name) }}"
 
-- name: lookup k8s configmap
+- name: lookup scheduler pod
   set_fact:
-    configmap_lookup: "{{ lookup('k8s', api_version='v1', kind='ConfigMap', namespace=namespace, resource_name=zuul_configmap_name) }}"
+    zuul_scheduler_pod: "{{ lookup('k8s', api_version='v1', kind='Pod', namespace=namespace, label_selector=sched_selector_value) }}"
 
-- name: lookup k8s Zuul cluster service
-  set_fact:
-    services_lookup: "{{ lookup('k8s', api_version='v1', kind='Service', namespace=namespace, label_selector=label_selector_value) }}"
-
-- name: lookup k8s Zuul cluster deployment
+- name: lookup k8s Zuul deployment
   set_fact:
     zuul_deployment_lookup: "{{ lookup('k8s', api_version='extensions/v1beta1', kind='Deployment', namespace=namespace, resource_name=zuul_cluster_name) }}"
 
-- name: Get currently deployed Zuul image name
+- name: get currently deployed Zuul image name
   set_fact:
     current_deployed_image: "{{ zuul_deployment_lookup.spec.template.spec.containers['name'=='zuul'].image }}"
   when: zuul_deployment_lookup.spec is defined

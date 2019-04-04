@@ -3,6 +3,8 @@
   gather_facts: no
   tasks:
     - debug: msg="Running Zuul Operator Playbook"
+    - name: Show the env
+      command: env
     - import_role:
         name: get_status
     - import_role:

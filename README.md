@@ -65,7 +65,7 @@ $ oc logs zuul-operator-c64756f66-rbdmg -c operator
 ```
 $ oc apply -f - <<EOF
 apiVersion: zuul-ci.org/v1alpha1
-kind: Zuul
+kind: ZuulService
 metadata:
   name: example-zuul
 spec:
@@ -80,7 +80,19 @@ spec:
 EOF
 zuul.zuul-ci.org/example-zuul created
 
-$ oc get zuul
+$ oc get zuulservice
 NAME           AGE
-example-zuul   16s
+example-zuul   10s
+
+$ oc get pods
+example-zuul-executor-696f969c4-6cpjv     1/1       Running     0          8s
+example-zuul-scheduler-77b6cf7967-ksh64   1/1       Running     0          11s
+example-zuul-web-5f744f89c9-qjp9l         1/1       Running     0          6s
+example-zuul-zk-0                         1/1       Running     0          22s
+
+$ oc get svc
+example-zuul-web           ClusterIP      172.30.209.181   <none>                          80/TCP                    41s
+
+$ curl 172.30.209.181/api/info
+{"info": {"capabilities": {"job_history": false}, "websocket_url": null, "stats": {"prefix": null, "type": "graphite", "url": null}}}
 ```

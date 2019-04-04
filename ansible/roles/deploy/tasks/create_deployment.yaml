@@ -1,0 +1,47 @@
+- name: Create Deployment
+  k8s:
+    state: "{{ state }}"
+    definition:
+      kind: "Deployment"
+      apiVersion: "extensions/v1beta1"
+      metadata:
+        name: "{{ zuul_cluster_name }}-{{ deployment_name }}"
+        namespace: "{{ namespace }}"
+        labels:
+          app: "{{ zuul_app_name }}"
+          zuul_cluster: "{{ zuul_cluster_name }}"
+      annotations:
+        configHash: ""
+      spec:
+        replicas: "{{ deployment_replicas|default(1) }}"
+        selector:
+          matchLabels:
+            app: "{{ zuul_cluster_name }}-{{ deployment_name }}"
+            zuul_cluster: "{{ zuul_cluster_name }}"
+        template:
+          metadata:
+            name: "{{ zuul_cluster_name }}-{{ deployment_name }}"
+            labels:
+              app: "{{ zuul_cluster_name }}-{{ deployment_name }}"
+              zuul_cluster: "{{ zuul_cluster_name }}"
+          spec:
+            containers:
+            - name: "{{ zuul_cluster_name }}-{{ deployment_name }}"
+              image: "{{ zuul_image_name[deployment_name] }}"
+              imagePullPolicy: "{{ zuul_image_pull_policy }}"
+              ports: "{{ deployment_ports|default([]) }}"
+              volumeMounts:
+              - mountPath: "/etc/zuul"
+                name: zuul-config-volume
+                readOnly: true
+              - mountPath: "/var/lib/zuul"
+                name: zuul-data-volume
+              command:
+                - "zuul-{{ deployment_name }}"
+                - "-d"
+            volumes:
+              - name: zuul-config-volume
+                configMap:
+                  name: "{{ deployment_config|default(zuul_configmap_name) }}"
+              - name: zuul-data-volume
+                emptyDir: {}

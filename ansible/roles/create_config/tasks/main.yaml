@@ -3,8 +3,8 @@
   k8s:
     state: "{{ state }}"
     definition:
-      apiVersion: v1
       kind: ConfigMap
+      apiVersion: v1
       metadata:
         name: "{{ zuul_configmap_name }}-scheduler"
         namespace: "{{ namespace }}"
@@ -28,20 +28,34 @@
 
           {% for connection in connections %}
           [connection {{ connection["name"] }}]
-          driver={{ connection["driver"] }}
-          server={{ connection["server"] }}
+          {% for k, v in connection.items() %}{% if k != "name" %}
+          {{ k }}={{ v }}
+          {% endif %}{% endfor %}
 
           {% endfor %}
 
         "main.yaml": |
           {{ tenants|to_yaml }}
+  register: scheduler_config
+
+- name: Register if tenant config changed
+  set_fact:
+    tenant_config_updated: >-
+      {% if (scheduler_config is changed and
+             scheduler_config.diff and
+             'main.yaml' in scheduler_config.diff[-1][1]) %}True
+      {% endif %}
+
+- debug:
+    msg: "Tenant config is updated"
+  when: tenant_config_updated
 
 - name: Create the zuul service configmap
   k8s:
     state: "{{ state }}"
     definition:
-      apiVersion: v1
       kind: ConfigMap
+      apiVersion: v1
       metadata:
         name: "{{ zuul_configmap_name }}"
         namespace: "{{ namespace }}"
@@ -51,15 +65,20 @@
       data:
         "zuul.conf": |
           [gearman]
-          server=zuul-scheduler
+          server={{ zuul_cluster_name }}-scheduler
           port=4730
 
           [zookeeper]
           hosts={{ zk_cluster_name }}-client:2181
 
+          [web]
+          listen_address=0.0.0.0
+          port=9000
+
           {% for connection in connections %}
           [connection {{ connection["name"] }}]
-          driver={{ connection["driver"] }}
-          server={{ connection["server"] }}
+          {% for k, v in connection.items() %}{% if k != "name" %}
+          {{ k }}={{ v }}
+          {% endif %}{% endfor %}
 
           {% endfor %}

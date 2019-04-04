@@ -1,229 +1,56 @@
 ---
 - name: Scheduler Deployment
-  k8s:
-    definition:
-      kind: "Deployment"
-      apiVersion: "extensions/v1beta1"
-      metadata:
-        name: "{{ zuul_cluster_name }}-scheduler"
-        namespace: "{{ namespace }}"
-        labels:
-          app: "{{ zuul_app_name }}-scheduler"
-          zuul_cluster: "{{ zuul_cluster_name }}"
-      spec:
-        replicas: 1
-        selector:
-          matchLabels:
-            app: "{{ zuul_app_name }}-scheduler"
-            zuul_cluster: "{{ zuul_cluster_name }}"
-        template:
-          metadata:
-            name: "{{ zuul_cluster_name }}-scheduler"
-            labels:
-              app: "{{ zuul_app_name }}-scheduler"
-              zuul_cluster: "{{ zuul_cluster_name }}"
-          spec:
-            serviceAccountName: "{{ zuul_service_account_name }}"
-            containers:
-            - name: zuul-scheduler
-              image: "{{ zuul_image_name_scheduler }}"
-              imagePullPolicy: "{{ zuul_image_pull_policy }}"
-              ports:
-                - containerPort: 4730
-                  protocol: "TCP"
-              volumeMounts:
-              - mountPath: "/etc/zuul"
-                name: zuul-config-volume
-                readOnly: true
-              - mountPath: "/var/lib/zuul"
-                name: zuul-data-volume
-              command:
-                - "zuul-scheduler"
-                - "-d"
-            volumes:
-              - name: zuul-config-volume
-                configMap:
-                  name: "{{ zuul_configmap_name }}-scheduler"
-              - name: zuul-data-volume
-                emptyDir: {}
+  vars:
+    deployment_name: scheduler
+    deployment_ports:
+      - containerPort: 4730
+        protocol: "TCP"
+    deployment_config: "{{ zuul_configmap_name }}-scheduler"
+  include_tasks: "./create_deployment.yaml"
+  register: sched_deployment
 
-- name: Create Scheduler service
-  k8s:
-    state: "{{ state }}"
-    definition:
-      apiVersion: v1
-      kind: Service
-      metadata:
-        name: "{{ zuul_cluster_name }}-scheduler"
-        namespace: "{{ namespace }}"
-        labels:
-          app: "{{ zuul_app_name }}"
-          zuul_cluster: "{{ zuul_cluster_name }}"
-      spec:
-        type: ClusterIP
-        selector:
-          app: "{{ zuul_app_name }}-scheduler"
-          zuul_cluster: "{{ zuul_cluster_name }}"
-        ports:
-        - name: "gearman"
-          port: 4730
-          protocol: TCP
-  when: (services_lookup|default([])|length==0)
+- name: Scheduler service
+  vars:
+    service_name: scheduler
+    service_ports:
+      - name: "gearman"
+        port: 4730
+        protocol: TCP
+  include_tasks: "./create_service.yaml"
+
+- name: Reload scheduler
+  include_tasks: "./reload_scheduler.yaml"
+  when:
+    - sched_deployment is not changed
+    - tenant_config_updated
 
 - name: Merger Deployment
-  k8s:
-    definition:
-      kind: "Deployment"
-      apiVersion: "extensions/v1beta1"
-      metadata:
-        name: "{{ zuul_cluster_name }}-merger"
-        namespace: "{{ namespace }}"
-        labels:
-          app: "{{ zuul_app_name }}-merger"
-          zuul_cluster: "{{ zuul_cluster_name }}"
-      spec:
-        replicas: "{{ merger.instances }}"
-        selector:
-          matchLabels:
-            app: "{{ zuul_app_name }}-merger"
-            zuul_cluster: "{{ zuul_cluster_name }}"
-        template:
-          metadata:
-            name: "{{ zuul_cluster_name }}-merger"
-            labels:
-              app: "{{ zuul_app_name }}-merger"
-              zuul_cluster: "{{ zuul_cluster_name }}"
-          spec:
-            serviceAccountName: "{{ zuul_service_account_name }}"
-            containers:
-            - name: zuul-merger
-              image: "{{ zuul_image_name_merger }}"
-              imagePullPolicy: "{{ zuul_image_pull_policy }}"
-              volumeMounts:
-              - mountPath: "/etc/zuul"
-                name: zuul-config-volume
-                readOnly: true
-              - mountPath: "/var/lib/zuul"
-                name: zuul-data-volume
-              command:
-                - "zuul-merger"
-                - "-d"
-            volumes:
-              - name: zuul-config-volume
-                configMap:
-                  name: "{{ zuul_configmap_name }}"
-              - name: zuul-data-volume
-                emptyDir: {}
+  vars:
+    deployment_name: merger
+    deployment_replicas: "{{ merger.instances }}"
+  include_tasks: "./create_deployment.yaml"
 
 - name: Executor Deployment
-  k8s:
-    definition:
-      kind: "Deployment"
-      apiVersion: "extensions/v1beta1"
-      metadata:
-        name: "{{ zuul_cluster_name }}-executor"
-        namespace: "{{ namespace }}"
-        labels:
-          app: "{{ zuul_app_name }}-executor"
-          zuul_cluster: "{{ zuul_cluster_name }}"
-      spec:
-        replicas: "{{ executor.instances }}"
-        selector:
-          matchLabels:
-            app: "{{ zuul_app_name }}-executor"
-            zuul_cluster: "{{ zuul_cluster_name }}"
-        template:
-          metadata:
-            name: "{{ zuul_cluster_name }}-executor"
-            labels:
-              app: "{{ zuul_app_name }}-executor"
-              zuul_cluster: "{{ zuul_cluster_name }}"
-          spec:
-            serviceAccountName: "{{ zuul_service_account_name }}"
-            containers:
-            - name: zuul-executor
-              image: "{{ zuul_image_name_executor }}"
-              imagePullPolicy: "{{ zuul_image_pull_policy }}"
-              volumeMounts:
-              - mountPath: "/etc/zuul"
-                name: zuul-config-volume
-                readOnly: true
-              - mountPath: "/var/lib/zuul"
-                name: zuul-data-volume
-              command:
-                - "zuul-executor"
-                - "-d"
-            volumes:
-              - name: zuul-config-volume
-                configMap:
-                  name: "{{ zuul_configmap_name }}"
-              - name: zuul-data-volume
-                emptyDir: {}
+  vars:
+    deployment_name: executor
+    deployment_replicas: "{{ executor.instances }}"
+  include_tasks: "./create_deployment.yaml"
 
 - name: Web Deployment
-  k8s:
-    definition:
-      kind: "Deployment"
-      apiVersion: "extensions/v1beta1"
-      metadata:
-        name: "{{ zuul_cluster_name }}-web"
-        namespace: "{{ namespace }}"
-        labels:
-          app: "{{ zuul_app_name }}-web"
-          zuul_cluster: "{{ zuul_cluster_name }}"
-      spec:
-        replicas: "{{ web.instances }}"
-        selector:
-          matchLabels:
-            app: "{{ zuul_app_name }}-web"
-            zuul_cluster: "{{ zuul_cluster_name }}"
-        template:
-          metadata:
-            name: "{{ zuul_cluster_name }}-web"
-            labels:
-              app: "{{ zuul_app_name }}-web"
-              zuul_cluster: "{{ zuul_cluster_name }}"
-          spec:
-            serviceAccountName: "{{ zuul_service_account_name }}"
-            containers:
-            - name: zuul-web
-              image: "{{ zuul_image_name_web }}"
-              imagePullPolicy: "{{ zuul_image_pull_policy }}"
-              volumeMounts:
-              - mountPath: "/etc/zuul"
-                name: zuul-config-volume
-                readOnly: true
-              - mountPath: "/var/lib/zuul"
-                name: zuul-data-volume
-              command:
-                - "zuul-web"
-                - "-d"
-            volumes:
-              - name: zuul-config-volume
-                configMap:
-                  name: "{{ zuul_configmap_name }}"
-              - name: zuul-data-volume
-                emptyDir: {}
+  vars:
+    deployment_name: web
+    deployment_replicas: "{{ web.instances }}"
+    deployment_ports:
+      - containerPort: 9000
+        protocol: "TCP"
+  include_tasks: "./create_deployment.yaml"
 
-- name: Create Web service
-  k8s:
-    state: "{{ state }}"
-    definition:
-      apiVersion: v1
-      kind: Service
-      metadata:
-        name: "{{ zuul_cluster_name }}-web"
-        namespace: "{{ namespace }}"
-        labels:
-          app: "{{ zuul_app_name }}"
-          zuul_cluster: "{{ zuul_cluster_name }}"
-      spec:
-        type: ClusterIP
-        selector:
-          app: "{{ zuul_app_name }}-web"
-          zuul_cluster: "{{ zuul_cluster_name }}"
-        ports:
-        - name: "web"
-          port: 9000
-          protocol: TCP
-          targetPort: 9000
+- name: Web Service
+  vars:
+    service_name: web
+    service_ports:
+      - name: "web"
+        port: 80
+        protocol: TCP
+        targetPort: 9000
+  include_tasks: "./create_service.yaml"

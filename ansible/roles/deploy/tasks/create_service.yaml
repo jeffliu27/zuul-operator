@@ -1,0 +1,18 @@
+- name: Create Service
+  k8s:
+    state: "{{ state }}"
+    definition:
+      kind: Service
+      apiVersion: v1
+      metadata:
+        name: "{{ zuul_cluster_name }}-{{ service_name }}"
+        namespace: "{{ namespace }}"
+        labels:
+          app: "{{ zuul_app_name }}"
+          zuul_cluster: "{{ zuul_cluster_name }}"
+      spec:
+        type: ClusterIP
+        selector:
+          app: "{{ zuul_cluster_name }}-{{ service_name }}"
+          zuul_cluster: "{{ zuul_cluster_name }}"
+        ports: "{{ service_ports }}"

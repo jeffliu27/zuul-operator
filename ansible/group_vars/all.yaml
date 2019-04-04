@@ -1,25 +1,7 @@
 ---
-namespace: "default"
-state: "present"
-
-zuul_app_name: "zuul"
-zuul_cluster_name: "zuul"
-
-zuul_version: "latest" #"3.7.1"
-zuul_image_name: "docker.io/zuul/zuul"
-zuul_image_name_scheduler: "{{ zuul_image_name }}-scheduler:{{ zuul_version }}"
-zuul_image_name_merger: "{{ zuul_image_name }}-merger:{{ zuul_version }}"
-zuul_image_name_executor: "{{ zuul_image_name }}-executor:{{ zuul_version }}"
-zuul_image_name_web: "{{ zuul_image_name }}-web:{{ zuul_version }}"
-zuul_service_account_name: "zuul-operator"
-
-zuul_configmap_name: "{{ zuul_cluster_name }}-config"
-
-zk_cluster_name: "example-zk"
-zk_api_version: "zookeeper.pravega.io/v1beta1"
-
-
 # Default cr spec
+meta:
+  name: demozuul
 tenants: []
 connections: []
 merger:
@@ -28,3 +10,23 @@ executor:
   instances: 1
 web:
   instances: 1
+namespace: "{{ meta.namespace|default('default') }}"
+state: "present"
+
+zuul_app_name: "zuul"
+zuul_cluster_name: "{{ meta.name }}"
+
+zuul_version: "latest" #"3.7.1"
+zuul_image_name_base: "docker.io/zuul/zuul"
+zuul_image_name:
+  scheduler: "{{ zuul_image_name_base }}-scheduler:{{ zuul_version }}"
+  merger: "{{ zuul_image_name_base }}-merger:{{ zuul_version }}"
+  executor: "{{ zuul_image_name_base }}-executor:{{ zuul_version }}"
+  web: "{{ zuul_image_name_base }}-web:{{ zuul_version }}"
+zuul_service_account_name: "zuul-operator"
+zuul_image_pull_policy: "IfNotPresent"
+
+zuul_configmap_name: "{{ zuul_cluster_name }}-config"
+
+zk_cluster_name: "{{ zuul_cluster_name }}-zk"
+zk_api_version: "zookeeper.pravega.io/v1beta1"
