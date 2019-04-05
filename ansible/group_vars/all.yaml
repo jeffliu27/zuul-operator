@@ -2,7 +2,10 @@
 # Default cr spec
 meta:
   name: demozuul
-tenants: []
+tenants:
+  - tenant:
+      name: demo
+      source: {}
 connections: []
 merger:
   instances: 0
