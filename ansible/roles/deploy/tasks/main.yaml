@@ -1,4 +1,10 @@
 ---
+- name: Save queue
+  include_tasks: "./queue_save.yaml"
+  when:
+    - scheduler_config is changed
+    - zuul_scheduler_pod
+
 - name: Scheduler Deployment
   vars:
     deployment_name: scheduler
@@ -54,3 +60,9 @@
         protocol: TCP
         targetPort: 9000
   include_tasks: "./create_service.yaml"
+
+- name: Load queue
+  include_tasks: "./queue_load.yaml"
+  when:
+    - scheduler_config is changed
+    - zuul_scheduler_pod

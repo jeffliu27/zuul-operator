@@ -30,6 +30,9 @@
               image: "{{ zuul_image_name[deployment_name] }}"
               imagePullPolicy: "{{ zuul_image_pull_policy }}"
               ports: "{{ deployment_ports|default([]) }}"
+              env:
+                - name: CONFIG_CHECKSUM
+                  value: "{{ scheduler_config.result.data | checksum }}"
               volumeMounts:
               - mountPath: "/etc/zuul"
                 name: zuul-config-volume
