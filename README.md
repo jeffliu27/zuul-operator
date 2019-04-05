@@ -77,6 +77,8 @@ kind: Zuul
 metadata:
   name: example-zuul
 spec:
+  # Optional user-provided ssh key
+  sshsecretename: ""
   merger:
     instances: 0
   executor:
@@ -94,6 +96,10 @@ zuul.zuul-ci.org/example-zuul created
 $ oc get zuul
 NAME           AGE
 example-zuul   10s
+
+# Get zuul public key
+$ oc get secret example-ssh-secret-pub -o "jsonpath={.data.id_rsa\.pub}" | base64 -d
+ssh-rsa AAAAB3Nza...
 
 $ oc get pods
 NAME                                      READY     STATUS      RESTARTS   AGE

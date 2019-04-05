@@ -25,6 +25,50 @@
           - username: dGVzdHVzZXI=
             password: UE5xOEVFVTBxTQ==
 
+- name: Create ssh key
+  when: not zuul_ssh_key
+  block:
+    - name: Create ssh key
+      command: "ssh-keygen -f /opt/ansible/ssh-{{ zuul_cluster_name }} -t rsa -N '' -C zuul"
+      args:
+        creates: "/opt/ansible/ssh-{{ zuul_cluster_name }}"
+
+    - name: Create ssh secret
+      k8s:
+        state: "{{ state }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            labels:
+              app: "{{ zuul_app_name }}"
+              zuul_cluster: "{{ zuul_cluster_name }}"
+            name: "{{ sshsecretname }}"
+            namespace: "{{ namespace }}"
+          type: Opaque
+          stringData:
+            id_rsa: |-
+              {{lookup('file', '/opt/ansible/ssh-' + zuul_cluster_name) }}
+
+    - name: Create ssh pub secret
+      k8s:
+        state: "{{ state }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            labels:
+              app: "{{ zuul_app_name }}"
+              zuul_cluster: "{{ zuul_cluster_name }}"
+            name: "{{ sshsecretname }}-pub"
+            namespace: "{{ namespace }}"
+          type: Opaque
+          stringData:
+            id_rsa.pub: |-
+              {{lookup('file', '/opt/ansible/ssh-' + zuul_cluster_name + '.pub') }}
+
+    # TODO: cleanup key file from operator pod
+
 - name: Create the scheduler configmap
   k8s:
     state: "{{ state }}"
@@ -58,6 +102,9 @@
 
           {% for connection in connections %}
           [connection {{ connection["name"] }}]
+          {% if connection["driver"] == "gerrit" %}
+          sshkey=/var/lib/zuul/ssh-secret/id_rsa
+          {% endif %}
           {% for k, v in connection.items() %}{% if k != "name" %}
           {{ k }}={{ v }}
           {% endif %}{% endfor %}
@@ -105,12 +152,19 @@
           listen_address=0.0.0.0
           port=9000
 
+          [executor]
+          # TODO: add secret map for executor ssh key
+          private_key_file=/var/lib/zuul/ssh-secret/id_rsa
+
           [connection sqlreporter]
           driver=sql
           dburi=postgresql://{{ zuul_pg_user[0]["username"] | b64decode }}:{{ zuul_pg_user[0]["password"] | b64decode }}@{{ pg_cluster_name }}/zuul
 
           {% for connection in connections %}
           [connection {{ connection["name"] }}]
+          {% if connection["driver"] == "gerrit" %}
+          sshkey=/var/lib/zuul/ssh-secret/id_rsa
+          {% endif %}
           {% for k, v in connection.items() %}{% if k != "name" %}
           {{ k }}={{ v }}
           {% endif %}{% endfor %}

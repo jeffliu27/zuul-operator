@@ -39,7 +39,10 @@
                 readOnly: true
               - mountPath: "/var/lib/zuul"
                 name: zuul-data-volume
+              - mountPath: "/var/lib/zuul/ssh-secret/"
+                name: zuul-ssh-key
               command:
+                - "/uid_entrypoint"
                 - "zuul-{{ deployment_name }}"
                 - "-d"
             volumes:
@@ -48,3 +51,7 @@
                   name: "{{ deployment_config|default(zuul_configmap_name) }}"
               - name: zuul-data-volume
                 emptyDir: {}
+              - name: zuul-ssh-key
+                secret:
+                  secretName: "{{ sshsecretname }}"
+                  defaultMode: 256

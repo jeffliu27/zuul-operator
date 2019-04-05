@@ -3,14 +3,16 @@
     label_selector_value: "zuul_cluster={{ zuul_cluster_name }},app={{ zuul_app_name }}"
     sched_selector_value: "zuul_cluster={{ zuul_cluster_name }},app={{ zuul_cluster_name }}-scheduler"
     pg_user_query: "[?metadata.name=='{{ pg_cluster_name }}-zuul-secret'].data"
+    ssh_key_query: "[?metadata.name=='{{ sshsecretname }}'].data"
 
 - name: lookup k8s secrets
   set_fact:
     secrets_lookup: "{{ lookup('k8s', api_version='v1', kind='Secret', namespace=namespace, label_selector=label_selector_value) }}"
 
-- name: lookup pg user
+- name: lookup cluster secret
   set_fact:
     zuul_pg_user: "{{ secrets_lookup | json_query(pg_user_query) }}"
+    zuul_ssh_key: "{{ secrets_lookup | json_query(ssh_key_query) }}"
 
 - name: lookup k8s postgres cr
   set_fact:

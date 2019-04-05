@@ -6,6 +6,7 @@ tenants:
   - tenant:
       name: demo
       source: {}
+sshsecretname: "{{ zuul_cluster_name }}-ssh-secret"
 connections: []
 merger:
   instances: 0
@@ -20,7 +21,10 @@ zuul_app_name: "zuul"
 zuul_cluster_name: "{{ meta.name }}"
 
 zuul_version: "latest" #"3.7.1"
-zuul_image_name_base: "docker.io/zuul/zuul"
+# Use local image for https://review.openstack.org/650246
+#zuul_image_name_base: "docker.io/zuul/zuul"
+zuul_image_name_base: "172.30.1.1:5000/myproject/zuul"
+
 zuul_image_name:
   scheduler: "{{ zuul_image_name_base }}-scheduler:{{ zuul_version }}"
   merger: "{{ zuul_image_name_base }}-merger:{{ zuul_version }}"
