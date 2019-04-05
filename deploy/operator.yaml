@@ -16,6 +16,7 @@ spec:
       containers:
         - name: ansible
           command:
+          - /uid_entrypoint
           - /usr/local/bin/ao-logs
           - /tmp/ansible-operator/runner
           - stdout
