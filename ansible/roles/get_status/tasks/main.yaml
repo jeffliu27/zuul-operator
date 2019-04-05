@@ -2,10 +2,19 @@
 - set_fact:
     label_selector_value: "zuul_cluster={{ zuul_cluster_name }},app={{ zuul_app_name }}"
     sched_selector_value: "zuul_cluster={{ zuul_cluster_name }},app={{ zuul_cluster_name }}-scheduler"
+    pg_user_query: "[?metadata.name=='{{ pg_cluster_name }}-zuul-secret'].data"
 
 - name: lookup k8s secrets
   set_fact:
     secrets_lookup: "{{ lookup('k8s', api_version='v1', kind='Secret', namespace=namespace, label_selector=label_selector_value) }}"
+
+- name: lookup pg user
+  set_fact:
+    zuul_pg_user: "{{ secrets_lookup | json_query(pg_user_query) }}"
+
+- name: lookup k8s postgres cr
+  set_fact:
+    pg_cr_lookup: "{{ lookup('k8s', api_version=pg_api_version, kind=pg_cr_kind, namespace=namespace, resource_name=pg_cluster_name) }}"
 
 - name: lookup k8s zookeeper cr
   set_fact:

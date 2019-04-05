@@ -22,16 +22,25 @@ oc login -u system:admin
 oc project default
 ```
 
-## Install Zookeeper Operator
+## Install Postgress Operator
 
-Perhaps this should be part of the zuul operator
+Follow [install instruction](https://crunchydata.github.io/postgres-operator/stable/installation/),
+basically:
+```
+vi ./pv/crunchy-pv.json  # set volume size and pv number
+oc apply -f ./pv/crunchy-pv.json
+oc apply -f ./deploy/cluster-rbac.yaml
+oc apply -f ./deploy/rbac.yaml
+./deploy/deploy.sh
+```
+
+## Install Zookeeper Operator
 
 ```shell
 oc create -f https://raw.githubusercontent.com/pravega/zookeeper-operator/master/deploy/crds/zookeeper_v1beta1_zookeepercluster_crd.yaml
 oc create -f https://raw.githubusercontent.com/pravega/zookeeper-operator/master/deploy/default_ns/rbac.yaml
 oc create -f https://raw.githubusercontent.com/pravega/zookeeper-operator/master/deploy/default_ns/operator.yaml
 ```
-
 
 ## Install Zuul Operator
 
@@ -58,7 +67,6 @@ $ oc logs zuul-operator-c64756f66-rbdmg -c operator
 {"level":"info","ts":1554197305.5855,"logger":"cmd","msg":"Watching namespace.","Namespace":"default"}
 ...
 ```
-
 
 ## Usage
 

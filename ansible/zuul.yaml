@@ -8,6 +8,9 @@
     - import_role:
         name: get_status
     - import_role:
+        name: deploy_pg
+      when: (pg_cr_lookup|length==0)
+    - import_role:
         name: deploy_zk
       when: (zk_cr_lookup|length==0)
     - import_role:

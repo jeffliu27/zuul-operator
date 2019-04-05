@@ -1,0 +1,127 @@
+- name: Postgresql Secret
+  k8s:
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        labels:
+          pg-database: "{{ pg_cluster_name }}"
+          app: "{{ zuul_app_name }}"
+          zuul_cluster: "{{ zuul_cluster_name }}"
+        name: "{{ pg_cluster_name }}-postgres-secret"
+        namespace: "{{ namespace }}"
+      type: Opaque
+      data:
+        password: M3pBeXpmMThxQg==
+        username: cG9zdGdyZXM=
+
+- name: Postgresql Primary User
+  k8s:
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        labels:
+          pg-database: "{{ pg_cluster_name }}"
+          app: "{{ zuul_app_name }}"
+          zuul_cluster: "{{ zuul_cluster_name }}"
+        name: "{{ pg_cluster_name }}-primaryuser-secret"
+        namespace: "{{ namespace }}"
+      type: Opaque
+      data:
+        password: d0ZvYWlRZFhPTQ==
+        username: cHJpbWFyeXVzZXI=
+
+- name: Postgresql Deployment
+  k8s:
+    definition:
+      apiVersion: "{{ pg_api_version }}"
+      kind: "{{ pg_cr_kind }}"
+      metadata:
+        labels:
+          archive: 'false'
+          archive-timeout: '60'
+          crunchy-pgbadger: 'false'
+          crunchy_collect: 'false'
+          current-primary: "{{ pg_cluster_name }}"
+          deployment-name: "{{ pg_cluster_name }}"
+          name: "{{ pg_cluster_name }}"
+          pg-cluster: "{{ pg_cluster_name }}"
+          pgo-backrest: 'false'
+          pgo-version: 3.5.2
+          primary: 'true'
+          app: "{{ zuul_app_name }}"
+          zuul_cluster: "{{ zuul_cluster_name }}"
+        name: "{{ pg_cluster_name }}"
+        namespace: "{{ namespace }}"
+      spec:
+        ArchiveStorage:
+          accessmode: ''
+          fsgroup: ''
+          matchLabels: ''
+          name: ''
+          size: ''
+          storageclass: ''
+          storagetype: ''
+          supplementalgroups: ''
+        BackrestStorage:
+          accessmode: ReadWriteMany
+          fsgroup: ''
+          matchLabels: ''
+          name: ''
+          size: 1G
+          storageclass: ''
+          storagetype: create
+          supplementalgroups: ''
+        ContainerResources:
+          limitscpu: ''
+          limitsmemory: ''
+          requestscpu: ''
+          requestsmemory: ''
+        PrimaryStorage:
+          accessmode: ReadWriteMany
+          fsgroup: ''
+          matchLabels: ''
+          name: "{{ pg_cluster_name }}"
+          size: 1G
+          storageclass: ''
+          storagetype: create
+          supplementalgroups: ''
+        ReplicaStorage:
+          accessmode: ReadWriteMany
+          fsgroup: ''
+          matchLabels: ''
+          name: ''
+          size: 1G
+          storageclass: ''
+          storagetype: create
+          supplementalgroups: ''
+        backuppath: ''
+        backuppvcname: ''
+        ccpimage: crunchy-postgres
+        ccpimagetag: centos7-11.2-2.3.1
+        clustername: "{{ pg_cluster_name }}"
+        customconfig: ''
+        database: zuul
+        name: "{{ pg_cluster_name }}"
+        nodename: ''
+        policies: ''
+        port: '5432'
+        primaryhost: "{{ pg_cluster_name }}"
+        primarysecretname: "{{ pg_cluster_name }}-primaryuser-secret"
+        replicas: '0'
+        rootsecretname: "{{ pg_cluster_name }}-postgres-secret"
+        secretfrom: ''
+        status: ''
+        strategy: '1'
+        user: zuul
+        userlabels:
+          archive: 'false'
+          archive-timeout: '60'
+          crunchy-pgbadger: 'false'
+          crunchy_collect: 'false'
+          pgo-backrest: 'false'
+          pgo-version: 3.5.2
+        usersecretname: "{{ pg_cluster_name }}-zuul-secret"
+
+- pause:

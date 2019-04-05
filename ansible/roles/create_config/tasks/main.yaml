@@ -1,4 +1,30 @@
 ---
+- name: Create Postgresql Credential
+  when: not zuul_pg_user
+  block:
+    - name: Create k8s secret
+      k8s:
+        state: "{{ state }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            labels:
+              pg-database: "{{ pg_cluster_name }}"
+              app: "{{ zuul_app_name }}"
+              zuul_cluster: "{{ zuul_cluster_name }}"
+            name: "{{ pg_cluster_name }}-zuul-secret"
+            namespace: "{{ namespace }}"
+          type: Opaque
+          data:
+            password: UE5xOEVFVTBxTQ==
+            username: dGVzdHVzZXI=
+    - name: Set fact
+      set_fact:
+        zuul_pg_user:
+          - username: dGVzdHVzZXI=
+            password: UE5xOEVFVTBxTQ==
+
 - name: Create the scheduler configmap
   k8s:
     state: "{{ state }}"
@@ -25,6 +51,10 @@
 
           [scheduler]
           tenant_config=/etc/zuul/main.yaml
+
+          [connection sqlreporter]
+          driver=sql
+          dburi=postgresql://{{ zuul_pg_user[0]["username"] | b64decode }}:{{ zuul_pg_user[0]["password"] | b64decode }}@{{ pg_cluster_name }}/zuul
 
           {% for connection in connections %}
           [connection {{ connection["name"] }}]
@@ -74,6 +104,10 @@
           [web]
           listen_address=0.0.0.0
           port=9000
+
+          [connection sqlreporter]
+          driver=sql
+          dburi=postgresql://{{ zuul_pg_user[0]["username"] | b64decode }}:{{ zuul_pg_user[0]["password"] | b64decode }}@{{ pg_cluster_name }}/zuul
 
           {% for connection in connections %}
           [connection {{ connection["name"] }}]
