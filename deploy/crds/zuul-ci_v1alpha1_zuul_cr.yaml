@@ -1,5 +1,5 @@
 apiVersion: operator.zuul-ci.org/v1alpha1
-kind: ZuulService
+kind: Zuul
 metadata:
   name: example-zuul
 spec:

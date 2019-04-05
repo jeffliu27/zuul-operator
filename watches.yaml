@@ -1,5 +1,5 @@
 ---
 - version: v1alpha1
   group: operator.zuul-ci.org
-  kind: ZuulService
+  kind: Zuul
   playbook: /opt/ansible/zuul.yaml
