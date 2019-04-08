@@ -123,5 +123,3 @@
           pgo-backrest: 'false'
           pgo-version: 3.5.2
         usersecretname: "{{ pg_cluster_name }}-zuul-secret"
-
-- pause:

@@ -119,7 +119,7 @@
   set_fact:
     tenant_config_updated: >-
       {% if (scheduler_config is changed and
-             scheduler_config.diff and
+             scheduler_config.diff|default(None) and
              'main.yaml' in scheduler_config.diff[-1][1]) %}True
       {% endif %}
 
