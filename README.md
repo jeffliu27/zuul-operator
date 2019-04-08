@@ -80,11 +80,13 @@ spec:
   # Optional user-provided ssh key
   sshsecretename: ""
   merger:
-    instances: 0
+    min: 0
+    max: 10
   executor:
-    instances: 1
+    min: 1
+    max: 5
   web:
-    instances: 1
+    min: 1
   connections: []
   tenants:
     - tenant:

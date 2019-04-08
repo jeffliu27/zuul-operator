@@ -12,6 +12,8 @@
       - containerPort: 4730
         protocol: "TCP"
     deployment_config: "{{ zuul_configmap_name }}-scheduler"
+    deployment_conf:
+      min: 1
   include_tasks: "./create_deployment.yaml"
   register: sched_deployment
 
@@ -24,6 +26,13 @@
         protocol: TCP
   include_tasks: "./create_service.yaml"
 
+- name: Wait for Service
+  set_fact:
+    gearman_service: "{{ lookup('k8s', api_version='v1', kind='Service', namespace=namespace, resource_name=zuul_cluster_name + '-scheduler') }}"
+  until: gearman_service
+  retries: 5
+  delay: 10
+
 - name: Reload scheduler
   include_tasks: "./reload_scheduler.yaml"
   when:
@@ -33,19 +42,19 @@
 - name: Merger Deployment
   vars:
     deployment_name: merger
-    deployment_replicas: "{{ merger.instances }}"
+    deployment_conf: "{{ merger }}"
   include_tasks: "./create_deployment.yaml"
 
 - name: Executor Deployment
   vars:
     deployment_name: executor
-    deployment_replicas: "{{ executor.instances }}"
+    deployment_conf: "{{ executor }}"
   include_tasks: "./create_deployment.yaml"
 
 - name: Web Deployment
   vars:
     deployment_name: web
-    deployment_replicas: "{{ web.instances }}"
+    deployment_conf: "{{ web }}"
     deployment_ports:
       - containerPort: 9000
         protocol: "TCP"

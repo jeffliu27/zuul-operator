@@ -9,11 +9,14 @@ tenants:
 sshsecretname: "{{ zuul_cluster_name }}-ssh-secret"
 connections: []
 merger:
-  instances: 0
+  min: 0
+  max: 5
 executor:
-  instances: 1
+  min: 1
+  max: 5
 web:
-  instances: 1
+  min: 1
+  max: 1
 namespace: "{{ meta.namespace|default('default') }}"
 state: "present"
 

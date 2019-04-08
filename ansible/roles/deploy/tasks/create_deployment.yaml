@@ -1,3 +1,13 @@
+- name: Get autoscale count
+  autoscale_gearman:
+    service: "{{ deployment_name }}"
+    gearman: "{{ gearman_service.spec.clusterIP|default(None) }}"
+    min: "{{ deployment_conf.min|default(0) }}"
+    max: "{{ deployment_conf.max|default(1) }}"
+  register: autoscale
+  when: gearman_service is defined
+
+# TODO: ensure graceful scale-down of service's replicas
 - name: Create Deployment
   k8s:
     state: "{{ state }}"
@@ -13,7 +23,7 @@
       annotations:
         configHash: ""
       spec:
-        replicas: "{{ deployment_replicas|default(1) }}"
+        replicas: "{{ autoscale.count|default(deployment_conf.min) }}"
         selector:
           matchLabels:
             app: "{{ zuul_cluster_name }}-{{ deployment_name }}"
