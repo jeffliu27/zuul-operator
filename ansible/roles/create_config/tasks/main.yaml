@@ -29,7 +29,7 @@
   when: not zuul_ssh_key
   block:
     - name: Create ssh key
-      command: "ssh-keygen -f /opt/ansible/ssh-{{ zuul_cluster_name }} -t rsa -N '' -C zuul"
+      command: "ssh-keygen -f /opt/ansible/ssh-{{ zuul_cluster_name }} -m PEM -t rsa -N '' -C zuul"
       args:
         creates: "/opt/ansible/ssh-{{ zuul_cluster_name }}"
 
@@ -47,7 +47,7 @@
             namespace: "{{ namespace }}"
           type: Opaque
           stringData:
-            id_rsa: |-
+            id_rsa: |
               {{lookup('file', '/opt/ansible/ssh-' + zuul_cluster_name) }}
 
     - name: Create ssh pub secret
@@ -64,7 +64,7 @@
             namespace: "{{ namespace }}"
           type: Opaque
           stringData:
-            id_rsa.pub: |-
+            id_rsa.pub: |
               {{lookup('file', '/opt/ansible/ssh-' + zuul_cluster_name + '.pub') }}
 
     # TODO: cleanup key file from operator pod
