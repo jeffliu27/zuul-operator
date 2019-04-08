@@ -112,7 +112,7 @@
           {% endfor %}
 
         "main.yaml": |
-          {{ tenants|to_yaml }}
+          {{ tenants|to_yaml|regex_replace('(config|untrusted)_projects:', '\1-projects:') }}
   register: scheduler_config
 
 - name: Register if tenant config changed
