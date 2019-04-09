@@ -12,4 +12,7 @@ spec:
   web:
     min: 1
   connections: []
-  tenants: []
+  tenants:
+    - tenant:
+        name: demo
+        source: {}

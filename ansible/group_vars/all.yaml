@@ -6,7 +6,6 @@ tenants:
   - tenant:
       name: demo
       source: {}
-sshsecretname: "{{ zuul_cluster_name }}-ssh-secret"
 connections: []
 merger:
   min: 0
@@ -22,6 +21,7 @@ state: "present"
 
 zuul_app_name: "zuul"
 zuul_cluster_name: "{{ meta.name }}"
+sshsecretname: "{{ zuul_cluster_name }}-ssh-secret"
 
 zuul_version: "latest" #"3.7.1"
 # Use local image for https://review.openstack.org/650246

@@ -12,7 +12,7 @@
 - name: lookup cluster secret
   set_fact:
     zuul_pg_user: "{{ secrets_lookup | json_query(pg_user_query) }}"
-    zuul_ssh_key: "{{ secrets_lookup | json_query(ssh_key_query) }}"
+    zuul_ssh_key: "{{ lookup('k8s', api_version='v1', kind='Secret', namespace=namespace, resource_name=sshsecretname) }}"
 
 - name: lookup k8s postgres cr
   set_fact:
