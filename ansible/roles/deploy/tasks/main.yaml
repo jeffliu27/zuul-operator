@@ -1,4 +1,10 @@
 ---
+- name: Nodepool Deployment
+  vars:
+    deployment_name: launcher
+    deployment_conf: "{{ launcher }}"
+  include_tasks: "./create_nodepool_deployment.yaml"
+
 - name: Save queue
   include_tasks: "./queue_save.yaml"
   when:

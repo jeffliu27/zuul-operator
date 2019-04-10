@@ -1,0 +1,72 @@
+# TODO:
+- name: Get autoscale count
+  # TODO: look for replicas count in zk requests list
+  # autoscale_zk:
+  #   service: {{ deployment_name }}
+  #   zkhost: "{{ zk_cluster_name }}-client:2181"
+  #   min: {{ deployment_conf.min|default(0) }}
+  # register: autoscale
+  set_fact:
+    autoscale:
+      count: "{{ deployment_conf.min|default(0) }}"
+
+- name: Create Deployment
+  k8s:
+    state: "{{ state }}"
+    definition:
+      kind: "Deployment"
+      apiVersion: "extensions/v1beta1"
+      metadata:
+        name: "{{ zuul_cluster_name }}-{{ deployment_name }}"
+        namespace: "{{ namespace }}"
+        labels:
+          app: "{{ zuul_app_name }}"
+          zuul_cluster: "{{ zuul_cluster_name }}"
+      annotations:
+        configHash: ""
+      spec:
+        replicas: "{{ autoscale.count }}"
+        selector:
+          matchLabels:
+            app: "{{ zuul_cluster_name }}-{{ deployment_name }}"
+            zuul_cluster: "{{ zuul_cluster_name }}"
+        template:
+          metadata:
+            name: "{{ zuul_cluster_name }}-{{ deployment_name }}"
+            labels:
+              app: "{{ zuul_cluster_name }}-{{ deployment_name }}"
+              zuul_cluster: "{{ zuul_cluster_name }}"
+          spec:
+            containers:
+            - name: "{{ zuul_cluster_name }}-{{ deployment_name }}"
+              image: "{{ zuul_image_name[deployment_name] }}"
+              imagePullPolicy: "{{ zuul_image_pull_policy }}"
+              env:
+                - name: CONFIG_CHECKSUM
+                  value: "{{ nodepool_config.result.data | checksum }}"
+              volumeMounts:
+              - mountPath: "/etc/nodepool"
+                name: nodepool-config-volume
+                readOnly: true
+              - mountPath: "/var/lib/nodepool"
+                name: nodepool-data-volume
+              - mountPath: "/var/lib/nodepool/.kube"
+                name: nodepool-kube-volume
+              - mountPath: "/var/lib/nodepool/.config/openstack"
+                name: nodepool-clouds-volume
+              command:
+                - "/uid_entrypoint"
+                - "nodepool-{{ deployment_name }}"
+                - "-d"
+            volumes:
+              - name: nodepool-config-volume
+                configMap:
+                  name: "{{ zuul_configmap_name }}-nodepool"
+              - name: nodepool-data-volume
+                emptyDir: {}
+              - name: nodepool-kube-volume
+                secret:
+                  secretName: "{{ kubesecretname }}"
+              - name: nodepool-clouds-volume
+                secret:
+                  secretName: "{{ cloudssecretname }}"

@@ -7,6 +7,12 @@ tenants:
       name: demo
       source: {}
 connections: []
+providers: []
+labels:
+  - name: okd-fedora
+    min-ready: 1
+launcher:
+  min: 1
 merger:
   min: 0
   max: 5
@@ -22,17 +28,23 @@ state: "present"
 zuul_app_name: "zuul"
 zuul_cluster_name: "{{ meta.name }}"
 sshsecretname: "{{ zuul_cluster_name }}-ssh-secret"
+kubesecretname: "{{ zuul_cluster_name }}-kube-secret"
+cloudssecretname: "{{ zuul_cluster_name }}-clouds-secret"
 
 zuul_version: "latest" #"3.7.1"
+nodepool_version: "latest"
 # Use local image for https://review.openstack.org/650246
 #zuul_image_name_base: "docker.io/zuul/zuul"
+#nodepool_image_name_base: "docker.io/zuul/nodepool"
 zuul_image_name_base: "172.30.1.1:5000/myproject/zuul"
+nodepool_image_name_base: "172.30.1.1:5000/myproject/nodepool"
 
 zuul_image_name:
   scheduler: "{{ zuul_image_name_base }}-scheduler:{{ zuul_version }}"
   merger: "{{ zuul_image_name_base }}-merger:{{ zuul_version }}"
   executor: "{{ zuul_image_name_base }}-executor:{{ zuul_version }}"
   web: "{{ zuul_image_name_base }}-web:{{ zuul_version }}"
+  launcher: "{{ nodepool_image_name_base }}-launcher:{{ nodepool_version }}"
 zuul_service_account_name: "zuul-operator"
 zuul_image_pull_policy: "IfNotPresent"
 

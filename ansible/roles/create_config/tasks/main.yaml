@@ -69,6 +69,48 @@
 
     # TODO: cleanup key file from operator pod
 
+- name: Create cloud config
+  when: not zuul_clouds_secret
+  k8s:
+    state: "{{ state }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        labels:
+          app: "{{ zuul_app_name }}"
+          zuul_cluster: "{{ zuul_cluster_name }}"
+        name: "{{ cloudssecretname }}"
+        namespace: "{{ namespace }}"
+      type: Opaque
+      stringData:
+        clouds.yaml: |
+          cache:
+            expiration:
+              server: 5
+              port: 5
+              floating-ip: 5
+
+- name: Create kube config
+  when: not zuul_kube_secret
+  k8s:
+    state: "{{ state }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        labels:
+          app: "{{ zuul_app_name }}"
+          zuul_cluster: "{{ zuul_cluster_name }}"
+        name: "{{ kubesecretname }}"
+        namespace: "{{ namespace }}"
+      type: Opaque
+      stringData:
+        config: |
+          apiVersion: v1
+          clusters: []
+          contexts: []
+
 - name: Create the scheduler configmap
   k8s:
     state: "{{ state }}"
@@ -170,3 +212,26 @@
           {% endif %}{% endfor %}
 
           {% endfor %}
+
+- name: Create the nodepool configmap
+  k8s:
+    state: "{{ state }}"
+    definition:
+      kind: ConfigMap
+      apiVersion: v1
+      metadata:
+        name: "{{ zuul_configmap_name }}-nodepool"
+        namespace: "{{ namespace }}"
+        labels:
+          app: "{{ zuul_app_name }}"
+          zuul_cluster: "{{ zuul_cluster_name }}"
+      data:
+        "nodepool.yaml": |
+           {{ ({'labels': labels})|to_yaml }}
+           {{ ({'providers': providers})|to_yaml }}
+           webapp:
+             port: 8006
+           zookeeper-servers:
+           - host: {{ zk_cluster_name }}-client
+             port: 2181
+  register: nodepool_config

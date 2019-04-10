@@ -6,6 +6,7 @@ A Zuul Operator PoC
 * [OKD](https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz)
 * [SDK](https://github.com/operator-framework/operator-sdk#quick-start)
 * [Zookeeper Operator](https://github.com/pravega/zookeeper-operator#install-the-operator)
+* [Postgresql Operator](https://operatorhub.io/operator/alpha/postgres-operator.v3.5.0)
 
 ## Prepare cluster
 
@@ -78,7 +79,11 @@ metadata:
   name: example-zuul
 spec:
   # Optional user-provided ssh key
-  sshsecretename: ""
+  #sshsecretename: ""
+  # Optional user-provided clouds.yaml
+  #cloudssecretname: ""
+  # Optional user-provided kube/config
+  #kubesecretname: ""
   merger:
     min: 0
     max: 10
@@ -86,6 +91,8 @@ spec:
     min: 1
     max: 5
   web:
+    min: 1
+  launcher:
     min: 1
   connections: []
   tenants:
@@ -106,6 +113,7 @@ ssh-rsa AAAAB3Nza...
 $ oc get pods
 NAME                                      READY     STATUS      RESTARTS   AGE
 example-zuul-executor-696f969c4-6cpjv     1/1       Running     0          8s
+example-zuul-launcher-5974789746-wbwpv    1/1       Running     0          9s
 example-zuul-pg-5dfc477bff-8426l          1/1       Running     0          30s
 example-zuul-scheduler-77b6cf7967-ksh64   1/1       Running     0          11s
 example-zuul-web-5f744f89c9-qjp9l         1/1       Running     0          6s
