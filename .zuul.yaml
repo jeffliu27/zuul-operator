@@ -1,7 +1,18 @@
+- job:
+    description: |
+      Test that zuul-operator works in Kubernetes (currently debugging use)
+    name: zuul-operator-functional-k8s
+    pre-run: playbooks/zuul-operator-functional-k8s/pre.yaml
+    run: playbooks/zuul-operator-functional-k8s/run.yaml
+    post-run: playbooks/zuul-operator-functional-k8s/post.yaml
+    nodeset: ubuntu-xenial
+    required-projects:
+      - zuul/zuul-operator
+
 - project:
     check:
       jobs:
-        - noop
+        - zuul-operator-functional-k8s
     gate:
       jobs:
-        - noop
+        - zuul-operator-functional-k8s

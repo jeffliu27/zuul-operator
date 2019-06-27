@@ -1,0 +1,6 @@
+- name: start kubernetes and install all dependencies
+  hosts: all
+
+  tasks:
+    - name: Get pods
+      command: kubectl get pods
