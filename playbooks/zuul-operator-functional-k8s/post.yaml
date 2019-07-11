@@ -1,6 +1,15 @@
-- name: start kubernetes and install all dependencies
+- name: View Status of K8s Pods
   hosts: all
 
   tasks:
     - name: Get pods
       command: kubectl get pods
+
+    - name: Get logs from ansible container
+      command: kubectl logs -l name=zuul-operator -c ansible
+
+    - name: Get logs from operator container
+      command: kubectl logs -l name=zuul-operator -c operator
+
+    - name: Log all Events
+      command: kubectl get events

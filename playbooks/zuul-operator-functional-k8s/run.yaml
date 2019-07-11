@@ -6,7 +6,7 @@
       set_fact:
         RELEASE_VERSION: v0.8.1
 
-    - name: Build Operator using Docker
+    - name: Build operator
       command: docker build -f build/Dockerfile -t zuul/zuul-operator .
       args:
         chdir: "{{ zuul.projects['opendev.org/zuul/zuul-operator'].src_dir }}"
@@ -25,3 +25,10 @@
       command: kubectl create -f deploy/operator.yaml
       args:
         chdir: "{{ zuul.projects['opendev.org/zuul/zuul-operator'].src_dir }}"
+
+    - name: wait for pods to come up
+      command: kubectl get pods -o json
+      register: kubectl_get_pods
+      until: kubectl_get_pods.stdout|from_json|json_query('items[*].status.phase')|unique == ["Running"]
+      retries: 30
+      delay: 10
