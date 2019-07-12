@@ -6,15 +6,8 @@
       set_fact:
         RELEASE_VERSION: v0.8.1
 
-    - name: Download Operator SDK Binary Release to Path
-      become: yes
-      get_url:
-        url: https://github.com/operator-framework/operator-sdk/releases/download/{{ RELEASE_VERSION }}/operator-sdk-{{ RELEASE_VERSION }}-x86_64-linux-gnu
-        dest: /usr/local/bin/operator-sdk
-        mode: a+x
-
-    - name: Build operator
-      command: operator-sdk build zuul/zuul-operator
+    - name: Build Operator using Docker
+      command: docker build -f build/Dockerfile -t zuul/zuul-operator .
       args:
         chdir: "{{ zuul.projects['opendev.org/zuul/zuul-operator'].src_dir }}"
 
