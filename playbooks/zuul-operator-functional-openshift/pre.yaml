@@ -1,0 +1,53 @@
+- hosts: controller
+  tasks:
+
+    - include_role:
+        name: clear-firewall
+
+    - name: Install origin tool
+      package:
+        name:
+          - origin
+          - docker
+      become: yes
+
+    - name: Use opendev buildset registry
+      include_role:
+        name: use-buildset-registry
+
+    - name: Fix docker start options
+      lineinfile:
+        dest: /etc/sysconfig/docker
+        regexp: "^OPTIONS="
+        line: "OPTIONS='--selinux-enabled --log-driver=journald --signature-verification=false --insecure-registry 172.30.0.0/16'"
+      become: yes
+
+    # See: https://github.com/openshift/origin/issues/15038
+    - name: Fix rhel secret issue
+      file:
+        path: /usr/share/rhel/secrets
+        state: absent
+      become: yes
+
+    - name: Start docker service
+      service:
+        name: docker
+        state: started
+      become: yes
+
+    - name: Enable test user to connect to docker
+      file:
+        path: /var/run/docker.sock
+        owner: "{{ ansible_user }}"
+      become: yes
+
+    - include_role:
+        name: deploy-openshift
+      vars:
+        skip_registry_check: true
+
+
+
+        #inherit from opendev-buildset-registry
+      # vars:
+        # buildset_registry_docker_user: root

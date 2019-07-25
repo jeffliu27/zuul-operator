@@ -1,0 +1,129 @@
+- hosts: controller
+
+  vars:
+    skip-registry-check: true
+
+  tasks:
+
+    - include_role:
+        name: clear-firewall
+
+    - name: Install origin tool
+      package:
+        name:
+          - origin
+          - docker
+      become: yes
+
+    - name: Use opendev buildset registry
+      include_role:
+        name: use-buildset-registry
+
+    - name: Fix docker start options
+      lineinfile:
+        dest: /etc/sysconfig/docker
+        regexp: "^OPTIONS="
+        line: "OPTIONS='--selinux-enabled --log-driver=journald --signature-verification=false --insecure-registry 172.30.0.0/16'"
+      become: yes
+
+    # See: https://github.com/openshift/origin/issues/15038
+    - name: Fix rhel secret issue
+      file:
+        path: /usr/share/rhel/secrets
+        state: absent
+      become: yes
+
+    - name: Start docker service
+      service:
+        name: docker
+        state: started
+      become: yes
+
+    - name: Enable test user to connect to docker
+      file:
+        path: /var/run/docker.sock
+        owner: "{{ ansible_user }}"
+      become: yes
+
+    - include_role:
+        name: deploy-openshift
+#-----------------------------------------------------------------------------------------------
+    - name: Login to the openshift cluster
+      command: >
+          oc login -u developer -p developer --insecure-skip-tls-verify=true
+          https://localhost:8443
+
+    - name: Login to the openshift registry
+      shell: docker login -u developer -p $(oc whoami -t) $(oc registry info)
+
+    - name: Restore admin user kube/config
+      copy:
+        src: /root/.kube/config
+        dest: "{{ ansible_env.HOME }}/.kube/config"
+        owner: "{{ ansible_env.USER }}"
+        mode: 0600
+        remote_src: yes
+      become: yes
+
+    - name: Login as admin user
+      command: oc login -u system:admin
+
+    # - name: Build the operator image
+    #   command: >
+    #     docker build -f build/Dockerfile -t
+    #     172.30.1.1:5000/myproject/zuul-operator:latest .
+    #   args:
+    #     chdir: "{{ zuul.projects['opendev.org/zuul/zuul-operator'].src_dir }}"
+
+    # - name: Push the operator image to the openshift registry
+    #   command: >
+    #     docker push 172.30.1.1:5000/myproject/zuul-operator:latest
+    #   register: result
+    #   until: result.rc == 0
+    #   retries: 5
+    #   delay: 1
+
+    # - name: Fix operator image location for the openshift registry
+    #   replace:
+    #     path: "{{ zuul.projects['opendev.org/zuul/zuul-operator'].src_dir }}/deploy/operator.yaml"
+    #     regexp: "image. .zuul.zuul-operator.$"
+    #     replace: "image: \"172.30.1.1:5000/myproject/zuul-operator\""
+
+    - name: Apply resources
+      command: "oc create -f deploy/{{ item }}.yaml"
+      with_items:
+        - crds/zuul-ci_v1alpha1_zuul_crd
+        - rbac
+        - operator
+      args:
+        chdir: "{{ zuul.projects['opendev.org/zuul/zuul-operator'].src_dir }}"
+
+    - name: Give some time to settle
+      pause:
+        minutes: 1
+
+    - name: Get status
+      command: oc status
+
+    - name: Get operator logs
+      command: oc logs  deployment/zuul-operator --all-containers
+
+    - name: zuul project info
+      debug:
+        var: zuul.project
+    - name: zuul project short name
+      debug:
+        var: zuul.project.short_name
+
+    - name: get project pod name to check if running
+      command: >
+        oc get pods --field-selector=status.phase=Running
+        -o "jsonpath={.items[*].metadata.name}"
+      register: _pod_name
+      retries: 100
+      delay: 2
+      until: "zuul.project.short_name in _pod_name.stdout"
+
+    - name: pod names that are running
+      debug:
+        var: _pod_name

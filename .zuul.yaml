@@ -21,14 +21,34 @@
         - context: .
           dockerfile: build/Dockerfile
           repository: zuul/zuul-operator
+
+- job:
+    description: |
+      Test that zuul-operator works in Openshift (currently debugging use)
+    name: zuul-operator-functional-openshift
+    # pre-run: playbooks/zuul-operator-functional-openshift/pre.yaml
+    run: playbooks/zuul-operator-functional-openshift/run.yaml
+    nodeset:
+      nodes:
+        - name: controller
+          label: fedora-29
+    required-projects:
+      - zuul/zuul-operator
+
 - project:
     check:
       jobs:
         - zuul-operator-build-image
-        - zuul-operator-functional-k8s:
+        - zuul-operator-functional-openshift:
             dependencies: zuul-operator-build-image
+        # - zuul-operator-build-image
+        #- zuul-operator-functional-k8s
+            # dependencies: zuul-operator-build-image
     gate:
       jobs:
         - zuul-operator-build-image
-        - zuul-operator-functional-k8s:
+        - zuul-operator-functional-openshift:
             dependencies: zuul-operator-build-image
+        # - zuul-operator-build-image
+        #- zuul-operator-functional-k8s
+            # dependencies: zuul-operator-build-image
