@@ -5,4 +5,6 @@
     - role: bindep
     - role: clear-firewall
     - role: install-kubernetes
+    - role: use-buildset-registry
+      buildset_registry_docker_user: root
       docker_version: 18.06.1~ce~3-0~ubuntu

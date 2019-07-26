@@ -6,11 +6,6 @@
       set_fact:
         RELEASE_VERSION: v0.8.1
 
-    - name: Build operator
-      command: docker build -f build/Dockerfile -t zuul/zuul-operator .
-      args:
-        chdir: "{{ zuul.projects['opendev.org/zuul/zuul-operator'].src_dir }}"
-
     - name: Setup CRD
       command: kubectl create -f deploy/crds/zuul-ci_v1alpha1_zuul_crd.yaml
       args:
