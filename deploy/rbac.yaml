@@ -66,6 +66,14 @@ rules:
   - '*'
   verbs:
   - '*'
+# Read access to all percona resources to check if there
+# already exists a perconaDB cluster
+- apiGroups:
+  - pxc.percona.com
+  resources:
+  - '*'
+  verbs:
+  - get
 
 
 ---

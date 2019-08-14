@@ -10,8 +10,8 @@
     - import_role:
         name: create_config
     - import_role:
-        name: deploy_pg
-      when: (pg_cr_lookup|length==0)
+        name: deploy_percona
+      when: (percona_cr_lookup|length==0)
     - import_role:
         name: deploy_zk
       when: (zk_cr_lookup|length==0)

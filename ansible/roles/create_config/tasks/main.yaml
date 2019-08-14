@@ -1,5 +1,6 @@
 ---
-- name: Create Postgresql Credential
+- name: Create Percona Credential
+  #todo: change pg to percona
   when: not zuul_pg_user
   block:
     - name: Create k8s secret
@@ -10,10 +11,10 @@
           kind: Secret
           metadata:
             labels:
-              pg-database: "{{ pg_cluster_name }}"
+              pg-database: "{{ percona_cluster_name }}"
               app: "{{ zuul_app_name }}"
               zuul_cluster: "{{ zuul_cluster_name }}"
-            name: "{{ pg_cluster_name }}-zuul-secret"
+            name: "{{ percona_cluster_name }}-zuul-secret"
             namespace: "{{ namespace }}"
           type: Opaque
           data:
@@ -140,7 +141,7 @@
 
           [connection sqlreporter]
           driver=sql
-          dburi=postgresql://{{ zuul_pg_user[0]["username"] | b64decode }}:{{ zuul_pg_user[0]["password"] | b64decode }}@{{ pg_cluster_name }}/zuul
+          dburi=postgresql://{{ zuul_pg_user[0]["username"] | b64decode }}:{{ zuul_pg_user[0]["password"] | b64decode }}@{{ percona_cluster_name }}/zuul
 
           {% for connection in connections %}
           [connection {{ connection["name"] }}]
@@ -200,7 +201,7 @@
 
           [connection sqlreporter]
           driver=sql
-          dburi=postgresql://{{ zuul_pg_user[0]["username"] | b64decode }}:{{ zuul_pg_user[0]["password"] | b64decode }}@{{ pg_cluster_name }}/zuul
+          dburi=postgresql://{{ zuul_pg_user[0]["username"] | b64decode }}:{{ zuul_pg_user[0]["password"] | b64decode }}@{{ percona_cluster_name }}/zuul
 
           {% for connection in connections %}
           [connection {{ connection["name"] }}]

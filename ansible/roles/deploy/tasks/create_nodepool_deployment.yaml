@@ -60,6 +60,7 @@
                 - "-d"
             volumes:
               - name: nodepool-config-volume
+                # can view config map keys using "ls /etc/config/"
                 configMap:
                   name: "{{ zuul_configmap_name }}-nodepool"
               - name: nodepool-data-volume

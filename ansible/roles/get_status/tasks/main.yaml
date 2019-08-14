@@ -2,7 +2,7 @@
 - set_fact:
     label_selector_value: "zuul_cluster={{ zuul_cluster_name }},app={{ zuul_app_name }}"
     sched_selector_value: "zuul_cluster={{ zuul_cluster_name }},app={{ zuul_cluster_name }}-scheduler"
-    pg_user_query: "[?metadata.name=='{{ pg_cluster_name }}-zuul-secret'].data"
+    pg_user_query: "[?metadata.name=='{{ percona_cluster_name }}-zuul-secret'].data"
     ssh_key_query: "[?metadata.name=='{{ sshsecretname }}'].data"
 
 - name: lookup k8s secrets
@@ -16,9 +16,9 @@
     zuul_clouds_secret: "{{ lookup('k8s', api_version='v1', kind='Secret', namespace=namespace, resource_name=cloudssecretname) }}"
     zuul_kube_secret: "{{ lookup('k8s', api_version='v1', kind='Secret', namespace=namespace, resource_name=kubesecretname) }}"
 
-- name: lookup k8s postgres cr
+- name: lookup k8s percona cr
   set_fact:
-    pg_cr_lookup: "{{ lookup('k8s', api_version=pg_api_version, kind=pg_cr_kind, namespace=namespace, resource_name=pg_cluster_name) }}"
+    percona_cr_lookup: "{{ lookup('k8s', api_version=percona_api_version, kind=percona_cr_kind, namespace=namespace, resource_name=percona_cluster_name) }}"
 
 - name: lookup k8s zookeeper cr
   set_fact:

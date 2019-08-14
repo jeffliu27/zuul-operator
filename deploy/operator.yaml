@@ -22,12 +22,16 @@ spec:
           - stdout
           # TODO: use a public name
           image: "zuul/zuul-operator"
+          # Note 1: Uncomment when running locally for development (before operator published)
+          # imagePullPolicy: "Never"
           volumeMounts:
           - mountPath: /tmp/ansible-operator/runner
             name: runner
             readOnly: true
         - name: operator
           image: "zuul/zuul-operator"
+          # Note: 1
+          # imagePullPolicy: "Never"
           volumeMounts:
           - mountPath: /tmp/ansible-operator/runner
             name: runner

@@ -21,9 +21,49 @@
       args:
         chdir: "{{ zuul.projects['opendev.org/zuul/zuul-operator'].src_dir }}"
 
+    - name: Create Zookeeper CRD
+      command: kubectl create -f https://raw.githubusercontent.com/pravega/zookeeper-operator/master/deploy/crds/zookeeper_v1beta1_zookeepercluster_crd.yaml
+
+    - name: Create Zookeeper rbac
+      command: kubectl create -f https://raw.githubusercontent.com/pravega/zookeeper-operator/master/deploy/default_ns/rbac.yaml
+
+    - name: Create Zookeeper operator
+      command: kubectl create -f https://raw.githubusercontent.com/pravega/zookeeper-operator/master/deploy/default_ns/operator.yaml
+
     - name: wait for pods to come up
       command: kubectl get pods -o json
       register: kubectl_get_pods
       until: kubectl_get_pods.stdout|from_json|json_query('items[*].status.phase')|unique == ["Running"]
       retries: 30
       delay: 10
+
+    ##### OLM ####
+
+    - command: kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/0.11.0/crds.yaml
+
+    - command: kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/0.11.0/olm.yaml
+
+    ##############
+
+    - name: Download Release 1.1.0 of Percona Operator
+      command: git clone -b release-1.1.0 https://github.com/percona/percona-xtradb-cluster-operator
+
+    - name: Deploy the Percona Operator
+      command: kubectl apply -f deploy/bundle.yaml
+      args:
+        chdir: "./percona-xtradb-cluster-operator/"
+
+    - name: Create Zuul Custom Resource
+      command: kubectl create -f deploy/crds/zuul-ci_v1alpha1_zuul_cr.yaml
+      args:
+        chdir: "{{ zuul.projects['opendev.org/zuul/zuul-operator'].src_dir }}"
+
+    - name: Give it time to run all the roles
+      pause:
+        minutes: 5
+
+    - name: Get operators
+      command: kubectl get csv -n operators
+
+    - name: Get zuul Resource
+      command: kubectl get zuul
